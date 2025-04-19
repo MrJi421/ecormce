@@ -1,0 +1,450 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout Options{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="checkout-steps">
+        <div class="step active" id="shipping-step">
+            <span class="step-number">1</span>
+            <span class="step-title">Shipping</span>
+        </div>
+        <div class="step" id="payment-step">
+            <span class="step-number">2</span>
+            <span class="step-title">Payment</span>
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            <span class="step-title">Review</span>
+        </div>
+    </div>
+
+    <div class="checkout-content">
+        <form method="POST" action="{{ url_for('checkout') }}" id="checkoutForm">
+            <!-- Shipping Section -->
+            <div class="checkout-section shipping-section" id="shipping-section">
+                <h3>Shipping Method</h3>
+                <div class="shipping-options">
+                    <div class="shipping-option">
+                        <input type="radio" id="standard" name="shipping_method" value="standard:0" checked>
+                        <label for="standard">
+                            <span class="method-name">Standard Shipping</span>
+                            <span class="delivery-time">5-7 business days</span>
+                            <span class="shipping-price">FREE</span>
+                        </label>
+                    </div>
+
+                    <div class="shipping-option">
+                        <input type="radio" id="express" name="shipping_method" value="express:9.99">
+                        <label for="express">
+                            <span class="method-name">Express Shipping</span>
+                            <span class="delivery-time">2-3 business days</span>
+                            <span class="shipping-price">$9.99</span>
+                        </label>
+                    </div>
+
+                    <div class="shipping-option">
+                        <input type="radio" id="overnight" name="shipping_method" value="overnight:19.99">
+                        <label for="overnight">
+                            <span class="method-name">Overnight Shipping</span>
+                            <span class="delivery-time">Next business day</span>
+                            <span class="shipping-price">$19.99</span>
+                        </label>
+                    </div>
+                </div>
+
+                <h3>Shipping Address</h3>
+                <div class="address-form">
+                    <div class="form-group">
+                        <label for="fullname">Full Name</label>
+                        <input type="text" id="fullname" name="fullname" required value="{{ current_user.Fullname }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Street Address</label>
+                        <textarea id="address" name="address" required>{{ current_user.Address or '' }}</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <input type="text" id="city" name="city" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="state">State</label>
+                            <input type="text" id="state" name="state" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="zipcode">ZIP Code</label>
+                            <input type="text" id="zipcode" name="zipcode" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-next" onclick="showPaymentSection()">Continue to Payment</button>
+                </div>
+            </div>
+
+            <!-- Payment Section -->
+            <div class="checkout-section payment-section" id="payment-section" style="display: none;">
+                <h3>Payment Method</h3>
+                <div class="payment-options">
+                    <div class="payment-option">
+                        <input type="radio" id="credit" name="payment_method" value="credit" checked>
+                        <label for="credit">
+                            <span class="method-name">Credit Card</span>
+                            <i class="fas fa-credit-card"></i>
+                        </label>
+                    </div>
+
+                    <div class="payment-option">
+                        <input type="radio" id="cash" name="payment_method" value="cash">
+                        <label for="cash">
+                            <span class="method-name">Cash on Delivery</span>
+                            <i class="fas fa-money-bill-wave"></i>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="credit-card-form">
+                    <div class="form-group">
+                        <label for="card_number">Card Number (12 digits)</label>
+                        <input type="text" id="card_number" name="card_number" 
+                               placeholder="123456789012" maxlength="12" pattern="\d{12}" required>
+                    </div>
+                </div>
+
+                <div id="cash-form" style="display: none;">
+                    <div class="cash-message">
+                        <i class="fas fa-info-circle"></i>
+                        <p>You will pay in cash upon delivery. No additional information needed.</p>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-back" onclick="showShippingSection()">Back to Shipping</button>
+                    <button type="submit" class="btn-submit">Place Order</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Order Summary Sidebar -->
+        <div class="order-summary">
+            <h3>Order Summary</h3>
+            <div class="summary-items">
+                {% for item in cart_items %}
+                <div class="summary-item">
+                    <span class="item-name">{{ item.product.Name }}</span>
+                    <span class="item-quantity">x{{ item.Quantity }}</span>
+                    <span class="item-price">${{ "%.2f"|format(item.product.Price * item.Quantity) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="summary-subtotal">
+                <span>Subtotal</span>
+                <span>${{ "%.2f"|format(total) }}</span>
+            </div>
+            <div class="summary-shipping">
+                <span>Shipping</span>
+                <span id="shipping-cost">$0.00</span>
+            </div>
+            <div class="summary-total">
+                <span>Total</span>
+                <span id="total-amount">${{ "%.2f"|format(total) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.checkout-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.checkout-steps {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    margin: 0 1rem;
+    color: #95a5a6;
+}
+
+.step.active {
+    color: #2c3e50;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: currentColor;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+.checkout-content {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 2rem;
+}
+
+.shipping-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.payment-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.shipping-options {
+    margin: 1.5rem 0;
+}
+
+.shipping-option {
+    margin-bottom: 1rem;
+}
+
+.shipping-option input[type="radio"] {
+    display: none;
+}
+
+.shipping-option label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.shipping-option input[type="radio"]:checked + label {
+    border-color: #2c3e50;
+    background: #f8f9fa;
+}
+
+.payment-options {
+    margin: 1.5rem 0;
+}
+
+.payment-option {
+    margin-bottom: 1rem;
+}
+
+.payment-option label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.payment-option input[type="radio"]:checked + label {
+    border-color: #2c3e50;
+    background: #f8f9fa;
+}
+
+.card-icons i {
+    font-size: 1.5rem;
+    margin-left: 0.5rem;
+    color: #666;
+}
+
+.order-summary {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 2rem;
+}
+
+.summary-items {
+    margin: 1rem 0;
+}
+
+.summary-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.summary-subtotal,
+.summary-shipping,
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.summary-total {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-next {
+    background: #2c3e50;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn-next:hover {
+    background: #34495e;
+}
+
+.btn-back {
+    background: #95a5a6;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-submit {
+    background: #27ae60;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.cash-message {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cash-message i {
+    color: #2c3e50;
+    font-size: 1.5rem;
+}
+
+.cash-message p {
+    margin: 0;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .checkout-content {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const shippingOptions = document.querySelectorAll('input[name="shipping_method"]');
+    const shippingCostElement = document.getElementById('shipping-cost');
+    const totalAmountElement = document.getElementById('total-amount');
+    const subtotal = { total };
+
+    function updateTotal() {
+        const selectedOption = document.querySelector('input[name="shipping_method"]:checked');
+        const shippingCost = parseFloat(selectedOption.value.split(':')[1]);
+        const total = subtotal + shippingCost;
+
+        shippingCostElement.textContent = `$${shippingCost.toFixed(2)}`;
+        totalAmountElement.textContent = `$${total.toFixed(2)}`;
+    }
+
+    shippingOptions.forEach(option => {
+        option.addEventListener('change', updateTotal);
+    });
+
+    // Initial update
+    updateTotal();
+
+    // Payment method toggle
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+    const creditCardForm = document.getElementById('credit-card-form');
+    const cashForm = document.getElementById('cash-form');
+
+    paymentMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            if (this.value === 'credit') {
+                creditCardForm.style.display = 'block';
+                cashForm.style.display = 'none';
+                document.getElementById('card_number').setAttribute('required', '');
+            } else {
+                creditCardForm.style.display = 'none';
+                cashForm.style.display = 'block';
+                document.getElementById('card_number').removeAttribute('required');
+            }
+        });
+    });
+
+    // Card number validation
+    const cardNumber = document.getElementById('card_number');
+    cardNumber.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 12) value = value.slice(0, 12);
+        e.target.value = value;
+    });
+
+    // Form validation
+    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        if (paymentMethod === 'credit') {
+            const cardNum = cardNumber.value.replace(/\s/g, '');
+            if (cardNum.length !== 12) {
+                e.preventDefault();
+                alert('Please enter a valid 12-digit card number');
+                return false;
+            }
+        }
+    });
+});
+
+function showPaymentSection() {
+    document.getElementById('shipping-section').style.display = 'none';
+    document.getElementById('payment-section').style.display = 'block';
+    document.getElementById('shipping-step').classList.remove('active');
+    document.getElementById('payment-step').classList.add('active');
+}
+
+function showShippingSection() {
+    document.getElementById('payment-section').style.display = 'none';
+    document.getElementById('shipping-section').style.display = 'block';
+    document.getElementById('payment-step').classList.remove('active');
+    document.getElementById('shipping-step').classList.add('active');
+}
+</script>
+{% endblock %}
+
+

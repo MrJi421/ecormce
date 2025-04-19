@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1>Welcome to E-Shop</h1>
+        <p>Discover Amazing Products at Incredible Prices</p>
+        <a href="{{ url_for('products') }}" class="cta-button">Shop Now</a>
+    </div>
+</div>
+
+<div class="features-section">
+    <div class="feature-card">
+        <i class="fas fa-shipping-fast"></i>
+        <h3>Fast Delivery</h3>
+        <p>Free shipping on orders over $50</p>
+    </div>
+    <div class="feature-card">
+        <i class="fas fa-lock"></i>
+        <h3>Secure Payment</h3>
+        <p>100% secure payment processing</p>
+    </div>
+    <div class="feature-card">
+        <i class="fas fa-headset"></i>
+        <h3>24/7 Support</h3>
+        <p>Dedicated customer support</p>
+    </div>
+</div>
+
+<div class="trending-section">
+    <h2>Trending Products</h2>
+    <div class="product-grid">
+        {% for product in trending_products %}
+        <div class="product-card">
+            <img src="{{ product.ImageURL }}" alt="{{ product.Name }}">
+            <h3>{{ product.Name }}</h3>
+            <p class="price">${{ "%.2f"|format(product.Price) }}</p>
+            <a href="{{ url_for('product_details', product_id=product.ProductID) }}" class="view-btn">View Details</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="categories-section">
+    <h2>Shop by Category</h2>
+    <div class="category-grid">
+        <a href="{{ url_for('products', category='electronics') }}" class="category-card">
+            <i class="fas fa-laptop"></i>
+            <h3>Electronics</h3>
+        </a>
+        <a href="{{ url_for('products', category='fashion') }}" class="category-card">
+            <i class="fas fa-tshirt"></i>
+            <h3>Fashion</h3>
+        </a>
+        <a href="{{ url_for('products', category='home') }}" class="category-card">
+            <i class="fas fa-home"></i>
+            <h3>Home & Living</h3>
+        </a>
+        <a href="{{ url_for('products', category='books') }}" class="category-card">
+            <i class="fas fa-book"></i>
+            <h3>Books</h3>
+        </a>
+    </div>
+</div>
+{% endblock %}

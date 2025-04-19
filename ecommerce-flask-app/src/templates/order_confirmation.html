@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmation{% endblock %}
+
+{% block content %}
+<div class="confirmation-container">
+    <div class="confirmation-content">
+        <div class="success-message">
+            <i class="fas fa-check-circle"></i>
+            <h2>Order Confirmed!</h2>
+            <p>Your order #{{ order.OrderID }} has been placed successfully.</p>
+        </div>
+
+        <div class="order-details">
+            <h3>Order Details</h3>
+            <p>Date: {{ order.OrderDate.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p>Status: <span class="status-badge">{{ order.Status }}</span></p>
+            
+            <div class="order-items">
+                {% for item in items %}
+                <div class="order-item">
+                    <img src="{{ item.product.ImageURL }}" alt="{{ item.product.Name }}">
+                    <div class="item-details">
+                        <h4>{{ item.product.Name }}</h4>
+                        <p>Quantity: {{ item.Quantity }}</p>
+                        <p>Price: ${{ "%.2f"|format(item.Price) }}</p>
+                        <p>Subtotal: ${{ "%.2f"|format(item.Price * item.Quantity) }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="order-total">
+                <h3>Total: ${{ "%.2f"|format(order.TotalAmount) }}</h3>
+            </div>
+        </div>
+
+        <div class="confirmation-actions">
+            <a href="{{ url_for('my_orders') }}" class="btn-primary">View My Orders</a>
+            <a href="{{ url_for('products') }}" class="btn-secondary">Continue Shopping</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.confirmation-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.confirmation-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.success-message {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #27ae60;
+}
+
+.success-message i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.order-items {
+    margin: 2rem 0;
+}
+
+.order-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.order-item img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.order-total {
+    text-align: right;
+    margin: 2rem 0;
+    padding-top: 1rem;
+    border-top: 2px solid #eee;
+}
+
+.confirmation-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 1rem 2rem;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #2c3e50;
+    color: white;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.status-badge {
+    background: #f1c40f;
+    color: #444;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

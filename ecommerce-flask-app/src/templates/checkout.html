@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="checkout-content">
+        <h2>Checkout</h2>
+
+        <!-- Order Summary -->
+        <div class="order-summary">
+            <h3>Order Summary</h3>
+            {% for item in cart_items %}
+            <div class="cart-item">
+                <img src="{{ item.product.ImageURL }}" alt="{{ item.product.Name }}">
+                <div class="item-details">
+                    <h4>{{ item.product.Name }}</h4>
+                    <p>Quantity: {{ item.Quantity }}</p>
+                    <p>Price: ${{ "%.2f"|format(item.product.Price) }}</p>
+                    <p>Subtotal: ${{ "%.2f"|format(item.product.Price * item.Quantity) }}</p>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="order-total">
+                <h3>Total: ${{ "%.2f"|format(total) }}</h3>
+            </div>
+        </div>
+
+        <!-- Shipping Information -->
+        <div class="shipping-section">
+            <h3>Shipping Information</h3>
+            
+            <div class="form-group">
+                <label for="shipping_address">Shipping Address</label>
+                <textarea name="shipping_address" id="shipping_address" rows="3" required>{{ current_user.Address or '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="shipping_method">Shipping Method</label>
+                <select name="shipping_method" id="shipping_method" required onchange="updateTotal()">
+                    <option value="standard" data-price="0">Standard Shipping (Free - 5-7 days)</option>
+                    <option value="express" data-price="9.99">Express Shipping ($9.99 - 2-3 days)</option>
+                    <option value="overnight" data-price="19.99">Overnight Shipping ($19.99 - Next day)</option>
+                </select>
+            </div>
+
+            <div class="shipping-estimate">
+                <p>Estimated Delivery: <span id="estimatedDelivery">5-7 business days</span></p>
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <form method="POST" action="{{ url_for('checkout') }}" id="checkoutForm">
+            <div class="payment-section">
+                <h3>Payment Information</h3>
+                
+                <div class="form-group">
+                    <label for="payment_method">Payment Method</label>
+                    <select name="payment_method" id="payment_method" required>
+                        <option value="credit_card">Credit Card</option>
+                        <option value="debit_card">Debit Card</option>
+                        <option value="net_banking">Net Banking</option>
+                    </select>
+                </div>
+
+                <div id="card_details">
+                    <div class="form-group">
+                        <label for="card_number">Card Number</label>
+                        <input type="text" id="card_number" name="card_number" 
+                               pattern="\d{16}" placeholder="1234 5678 9012 3456" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expiry">Expiry Date</label>
+                            <input type="text" id="expiry" name="expiry" 
+                                   pattern="\d{2}/\d{2}" placeholder="MM/YY" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cvv">CVV</label>
+                            <input type="text" id="cvv" name="cvv" 
+                                   pattern="\d{3,4}" placeholder="123" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-actions">
+                <button type="submit" class="btn-checkout">Place Order & Pay</button>
+                <a href="{{ url_for('cart') }}" class="btn-back">Back to Cart</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.checkout-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.checkout-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.order-summary {
+    margin: 2rem 0;
+}
+
+.cart-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-item img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.order-total {
+    text-align: right;
+    margin: 2rem 0;
+    padding-top: 1rem;
+    border-top: 2px solid #eee;
+}
+
+.shipping-section {
+    margin: 2rem 0;
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.shipping-estimate {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.shipping-estimate p {
+    margin: 0;
+    color: #666;
+}
+
+.payment-section {
+    margin: 2rem 0;
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.checkout-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+.btn-checkout {
+    background: #2c3e50;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-back {
+    background: #95a5a6;
+    color: white;
+    padding: 1rem 2rem;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.btn-checkout:hover {
+    background: #34495e;
+}
+
+.btn-back:hover {
+    background: #7f8c8d;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('checkoutForm');
+    const cardNumber = document.getElementById('card_number');
+    const expiry = document.getElementById('expiry');
+    const cvv = document.getElementById('cvv');
+    const shippingMethod = document.getElementById('shipping_method');
+    const estimatedDelivery = document.getElementById('estimatedDelivery');
+
+    // Format card number
+    cardNumber.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 16) value = value.slice(0, 16);
+        e.target.value = value.replace(/(\d{4})/g, '$1 ').trim();
+    });
+
+    // Format expiry date
+    expiry.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 4) value = value.slice(0, 4);
+        if (value.length >= 2) {
+            value = value.slice(0, 2) + '/' + value.slice(2);
+        }
+        e.target.value = value;
+    });
+
+    // Format CVV
+    cvv.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 4) value = value.slice(0, 4);
+        e.target.value = value;
+    });
+
+    // Update total with shipping cost
+    function updateTotal() {
+        const subtotal = parseFloat({ total });
+        const selectedOption = shippingMethod.options[shippingMethod.selectedIndex];
+        const shippingCost = parseFloat(selectedOption.dataset.price || 0);
+        const newTotal = subtotal + shippingCost;
+        
+        document.querySelector('.order-total h3').textContent = 
+            `Total: $${newTotal.toFixed(2)} (Including Shipping)`;
+
+        // Update estimated delivery date
+        const deliveryText = selectedOption.textContent.match(/\((.*?)\)/)[1];
+        estimatedDelivery.textContent = deliveryText;
+    }
+
+    // Initial update and event listener for shipping method changes
+    updateTotal();
+    shippingMethod.addEventListener('change', updateTotal);
+
+    // Form validation
+    function validateForm() {
+        const cardValue = cardNumber.value.replace(/\s/g, '');
+        const expiryValue = expiry.value;
+        const cvvValue = cvv.value;
+        let isValid = true;
+
+        // Validate card number
+        if (cardValue.length !== 16) {
+            alert('Please enter a valid 16-digit card number');
+            isValid = false;
+        }
+
+        // Validate expiry date
+        if (expiryValue) {
+            const [month, year] = expiryValue.split('/');
+            if (!month || !year || parseInt(month) > 12 || parseInt(month) < 1) {
+                alert('Please enter a valid expiry date (MM/YY)');
+                isValid = false;
+            }
+        }
+
+        // Validate CVV
+        if (cvvValue.length < 3) {
+            alert('Please enter a valid CVV');
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // Form submission handler
+    form.addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

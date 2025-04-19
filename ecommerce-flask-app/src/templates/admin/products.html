@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Products{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-sidebar">
+        <div class="admin-nav">
+            <h3>Admin Panel</h3>
+            <ul>
+                <li><a href="{{ url_for('admin_dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a></li>
+                <li><a href="{{ url_for('admin_products') }}" class="active">
+                    <i class="fas fa-box"></i> Products
+                </a></li>
+                <li><a href="{{ url_for('admin_orders') }}">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a></li>
+                <li><a href="{{ url_for('admin_users') }}">
+                    <i class="fas fa-users"></i> Users
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="admin-content">
+        <div class="admin-header">
+            <h2>Product Management</h2>
+            <button class="btn btn-primary" onclick="document.getElementById('addProductModal').style.display='block'">
+                <i class="fas fa-plus"></i> Add New Product
+            </button>
+        </div>
+
+        <!-- Product List -->
+        <div class="product-list">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ product.ProductID }}</td>
+                        <td><img src="{{ product.ImageURL }}" alt="{{ product.Name }}" class="product-thumb"></td>
+                        <td>{{ product.Name }}</td>
+                        <td>{{ product.category.CategoryName }}</td>
+                        <td>${{ "%.2f"|format(product.Price) }}</td>
+                        <td>{{ product.Stock }}</td>
+                        <td>
+                            <button class="btn-sm btn-primary" onclick="editProduct({{ product.ProductID }})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn-sm btn-danger" onclick="deleteProduct({{ product.ProductID }})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="addProductModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Add New Product</h3>
+        <form action="{{ url_for('add_product') }}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Price ($)</label>
+                <input type="number" name="price" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label>Stock</label>
+                <input type="number" name="stock" required>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category_id" required>
+                    {% for category in categories %}
+                    <option value="{{ category.CategoryID }}">{{ category.CategoryName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="url" name="image_url" required>
+                <small>Please provide a direct image URL</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Product</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div id="editProductModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Edit Product</h3>
+        <form id="editProductForm" method="POST">
+            <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" name="name" id="edit_name" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" id="edit_description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Price ($)</label>
+                <input type="number" name="price" id="edit_price" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label>Stock</label>
+                <input type="number" name="stock" id="edit_stock" required>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category_id" id="edit_category_id" required>
+                    {% for category in categories %}
+                    <option value="{{ category.CategoryID }}">
+                        {{ category.CategoryName }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="url" name="image_url" id="edit_image_url">
+                <small>Leave empty to keep existing image</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Product</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background: #2c3e50;
+    color: white;
+    padding: 1rem;
+}
+
+.admin-content {
+    flex: 1;
+    padding: 2rem;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.product-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    margin: 2% auto;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addModal = document.getElementById('addProductModal');
+    const editModal = document.getElementById('editProductModal');
+    const editForm = document.getElementById('editProductForm');
+
+    // Add Product Button
+    document.querySelector('.btn.btn-primary').addEventListener('click', function() {
+        addModal.style.display = 'block';
+    });
+
+    // Edit Product
+    function editProduct(productId) {
+        fetch(`/admin/products/${productId}`)
+            .then(response => response.json())
+            .then(product => {
+                // Populate form fields
+                document.getElementById('edit_name').value = product.Name;
+                document.getElementById('edit_description').value = product.Description;
+                document.getElementById('edit_price').value = product.Price;
+                document.getElementById('edit_stock').value = product.Stock;
+                document.getElementById('edit_category_id').value = product.CategoryID;
+                
+                // Set form action
+                editForm.action = `/admin/products/${productId}/update`;
+                
+                // Show modal
+                editModal.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load product data');
+            });
+    }
+
+    // Delete Product
+    function deleteProduct(productId) {
+        if (confirm('Are you sure you want to delete this product?')) {
+            fetch(`/admin/products/${productId}/delete`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    throw new Error(data.error || 'Failed to delete product');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+            });
+        }
+    }
+
+    // Close modals
+    function closeModal() {
+        addModal.style.display = 'none';
+    }
+
+    function closeEditModal() {
+        editModal.style.display = 'none';
+    }
+
+    // Event listeners for close buttons
+    document.querySelectorAll('.close').forEach(button => {
+        button.addEventListener('click', function() {
+            closeModal();
+            closeEditModal();
+        });
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target === addModal) {
+            closeModal();
+        } else if (event.target === editModal) {
+            closeEditModal();
+        }
+    };
+
+    // Expose functions to global scope
+    window.editProduct = editProduct;
+    window.deleteProduct = deleteProduct;
+    window.closeModal = closeModal;
+    window.closeEditModal = closeEditModal;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="cart-container">
+    <h2>Your Shopping Cart</h2>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    {% if cart_items %}
+        <div class="cart-items">
+            {% for item in cart_items %}
+            <div class="cart-item">
+                <img src="{{ item.product.ImageURL }}" alt="{{ item.product.Name }}">
+                <div class="item-details">
+                    <h3>{{ item.product.Name }}</h3>
+                    <p class="price">${{ "%.2f"|format(item.product.Price) }}</p>
+                    <div class="quantity">
+                        <form action="{{ url_for('update_cart_item') }}" method="POST" class="update-quantity">
+                            <input type="hidden" name="cart_id" value="{{ item.CartID }}">
+                            <input type="number" name="quantity" value="{{ item.Quantity }}" min="1" max="{{ item.product.Stock }}">
+                            <button type="submit" class="btn btn-update">Update</button>
+                        </form>
+                        <form action="{{ url_for('remove_from_cart') }}" method="POST" class="remove-item">
+                            <input type="hidden" name="cart_id" value="{{ item.CartID }}">
+                            <button type="submit"class="btn btn-remove">Remove</button>
+                        </form>
+                    </div>
+                    <p class="subtotal">Subtotal: ${{ "%.2f"|format(item.product.Price * item.Quantity) }}</p>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- <div class="cart-summary">
+                <h3>Total: ${{ "%.2f"|format(total) }}</h3>
+                <form action="{{ url_for('checkout') }}" method="POST">
+                    <button type="submit" class="checkout-btn">Proceed to Checkout</button>
+                </form>
+            </div> -->
+        </div>
+    {% else %}
+        <p class="empty-cart">Your cart is empty</p>
+        <a href="{{ url_for('products') }}" class="continue-shopping">Continue Shopping</a>
+    {% endif %}
+
+    <div class="cart-actions">
+        <div class="cart-summary">
+            <h3>Cart Summary</h3>
+            <div class="summary-item">
+                <span>Subtotal:</span>
+                <span>${{ "%.2f"|format(total) }}</span>
+            </div>
+            <div class="summary-item">
+                <span>Estimated Tax:</span>
+                <span>${{ "%.2f"|format(total * 0.1) }}</span>
+            </div>
+            <div class="summary-total">
+                <span>Total:</span>
+                <span>${{ "%.2f"|format(total * 1.1) }}</span>
+            </div>
+            <a href="{{ url_for('checkout_options') }}" class="btn-checkout">
+                Proceed to Checkout
+            </a>
+        </div>
+    </div>
+
+    <style>
+    .cart-actions {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #eee;
+    }
+
+    .cart-summary {
+        max-width: 100%;
+        margin-left: auto;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        color: #666;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #eee;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .btn-checkout {
+        display: block;
+        width: 100%;
+        padding: 1rem;
+        margin-top: 1.5rem;
+        background: #2c3e50;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background 0.3s;
+    }
+
+    .btn-checkout:hover {
+        background: #34495e;
+    }
+    </style>
+</div>
+{% endblock %}

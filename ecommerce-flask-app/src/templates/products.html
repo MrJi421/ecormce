@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Products{% endblock %}
+
+{% block content %}
+    <div class="products-container">
+        <!-- <div class="admin-controls">
+            <button id="testDbBtn" class="test-db-btn">Test DB Connection</button>
+            <span id="dbStatus"></span>
+        </div> -->
+        
+        {% if search_query %}
+        <h2>Search results for: {{ search_query }}</h2>
+        {% else %}
+        <h2>Our Products</h2>
+        {% endif %}
+
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <a href="{{ url_for('product_details', product_id=product.ProductID) }}" class="product-link">
+                    <img src="{{ product.ImageURL }}" alt="{{ product.Name }}">
+                    <h3>{{ product.Name }}</h3>
+                    <p>{{ product.Description }}</p>
+                    <p class="price">${{ "%.2f"|format(product.Price) }}</p>
+                    <p class="stock">Stock: {{ product.Stock }}</p>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- <script>
+        document.getElementById('testDbBtn').addEventListener('click', async () => {
+            const statusSpan = document.getElementById('dbStatus');
+            try {
+                statusSpan.textContent = 'Testing connection...';
+                const response = await fetch('/test-db');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    statusSpan.textContent = `✅ ${data.message} (Products: ${data.data.product_count})`;
+                    statusSpan.className = 'success';
+                } else {
+                    statusSpan.textContent = `❌ ${data.message}`;
+                    statusSpan.className = 'error';
+                }
+            } catch (error) {
+                statusSpan.textContent = `❌ Connection failed: ${error.message}`;
+                statusSpan.className = 'error';
+            }
+        });
+    </script> -->
+{% endblock %}

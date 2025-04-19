@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Users{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-sidebar">
+        <div class="admin-nav">
+            <h3>Admin Panel</h3>
+            <ul>
+                <li><a href="{{ url_for('admin_dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a></li>
+                <li><a href="{{ url_for('admin_products') }}">
+                    <i class="fas fa-box"></i> Products
+                </a></li>
+                <li><a href="{{ url_for('admin_orders') }}">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a></li>
+                <li><a href="{{ url_for('admin_users') }}" class="active">
+                    <i class="fas fa-users"></i> Users
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="admin-content">
+        <div class="admin-header">
+            <h2>Users List</h2>
+        </div>
+
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>#{{ user.UserID }}</td>
+                        <td>{{ user.Fullname }}</td>
+                        <td>{{ user.Email }}</td>
+                        <td>{{ user.Phone or 'N/A' }}</td>
+                        <td>
+                            <span class="status-badge {% if user.IsActive %}status-active{% else %}status-inactive{% endif %}">
+                                {{ 'Active' if user.IsActive else 'Inactive' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

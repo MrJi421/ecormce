@@ -1,0 +1,1 @@
+# The file /ecommerce-flask-app/ecommerce-flask-app/src/models/__init__.py is intentionally left blank.
